@@ -28,7 +28,6 @@ class Window < Chingu::Window
     retrofy
     
     #push_game_state LoadingState
-    binding.pry
     push_game_state EditingState.new(file: './media/redchar.yml')
   end
   
