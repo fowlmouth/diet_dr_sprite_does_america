@@ -1,4 +1,7 @@
 
+#TODO
+#replace all of this with some gui lib
+#this state should do all the loading thats done in EditingState 
 module SpriteEdit
 class LoadingState < Chingu::GameState
 
@@ -20,6 +23,7 @@ class LoadingState < Chingu::GameState
       @preview.draw
       @go.draw
     end
+    
   end
 
   def lclick

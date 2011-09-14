@@ -1,13 +1,13 @@
 
 module ZOrder
 
-CURSOR = 10
-
 UI_BG   = 50
 UI_TEXT = 60
 
-FRAME = 100
+FRAME = 90
 PREVIEW = 105
 GRID = 110
+
+CURSOR = 900
 
 end

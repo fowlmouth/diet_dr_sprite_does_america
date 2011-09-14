@@ -10,7 +10,7 @@ class Cursor < Chingu::GameObject
   def setup
     self.rotation_center = :center
     @animation = Chingu::Animation.new(
-      file:  'media/gui/cursor.bmp',
+      file:  'media/gui/cursor.png',
       size:  [5,5],
       delay: 100)
     @image = @animation.first

@@ -15,11 +15,23 @@ class Grid
         i = TexPlay.create_blank_image $window, w*fx, h*fy, color: :alpha
         (w/2).times { |x|
           next if x == 0 || x == w/2
-          i.line x*2*fx, 0, x*2*fx, h*fy, color: GRIDCOLOR
+          #i.line x*2*fx, 0, x*2*fx, h*fy, color: GRIDCOLOR
+          x1, y1 = x*2*fx, 0
+          x2, y2 = x*2*fx, h*fy
+          (y1..y2).each { |p|
+            next if p%3 != 0
+            i.pixel x1, p, color: GRIDCOLOR
+          }
         }
         (h/2).times { |y|
           next if y == 0 || y == h/2
-          i.line 0, y*2*fy, w*fx, y*2*fy, color: GRIDCOLOR
+          #i.line 0, y*2*fy, w*fx, y*2*fy, color: GRIDCOLOR
+          x1, y1 = 0, y*2*fy
+          x2, y2 = w*fx, y*2*fy
+          (x1..x2).each { |p|
+            next if p%3 != 0
+            i.pixel p, y1, color: GRIDCOLOR
+          }
         }
         
         #w.times {   |x|

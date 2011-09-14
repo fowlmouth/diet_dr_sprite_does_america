@@ -11,6 +11,7 @@ $: << '.'
   loading-state
   ghetto-animation
   anim-preview
+  sprite-part
   zorder
   grid
   gui/textfield
@@ -23,12 +24,12 @@ class Window < Chingu::Window
   
   def initialize
     super 640, 480, false
-    self.factor = 3
+    self.factor = 4
     self.input = { escape: :exit }# left_mouse_button: :lclick }
     retrofy
     
     #push_game_state LoadingState
-    push_game_state EditingState.new(file: './media/redchar.yml')
+    push_game_state EditingState.new(file: (ARGV[0] or './media/redchar.yml'))
   end
   
 end
