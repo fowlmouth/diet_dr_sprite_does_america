@@ -89,6 +89,8 @@ class EditingState < Chingu::GameState
       
       y += stuff[:size][1] * $window.factor + 10
     }
+    
+    generate_preview
   end
   
   def generate_preview anim_name = nil
@@ -101,7 +103,20 @@ class EditingState < Chingu::GameState
       #how to build a new image from a bunch of gameobjects?
       #i guess pull out the images and splice them together..
       #this isnt going to be fun
-      @previews[name] = AnimatedPreviewFromABunchOfGameObjectsWithParts
+      derp = []
+      w,h = *@dat[:animations][name][:size]
+      frames.each { |fff|
+        i = TexPlay.create_blank_image($window, w, h, color: :alpha)
+        fff.each { |f|
+          i.splice f.image, f.rx, f.ry, chroma_key: :alpha
+        }
+        derp << i
+      }
+      @previews[name].destroy if @previews.has_key? name
+      @previews[name] = AnimatedPreview.create(
+        anim: GhettoAnimation.new(frames: derp),
+        x: ($window.width-20-(derp.first.width*$window.factor)),
+        y: frames.first.first.y, zorder: ZOrder::PREVIEW)
     }
   end
 
