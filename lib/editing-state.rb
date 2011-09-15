@@ -24,8 +24,13 @@ class EditingState < Chingu::GameState
     #for_your_problems_you_need_look_no_further
     grow_yo_coque_is_a_new_product_that_is_guaranteed_to
     
-    #self.input = %w{wheel_up wheel_down mouse_left}.map &:intern # :>
-    self.input = {p: -> { binding.pry }}
+    
+    self.input = {
+      p: -> { binding.pry },
+      wheel_up: :wheel_up,
+      wheel_down: :wheel_down,
+      mouse_left: :mouse_left
+    }
   end
   
   #TODO factor these two methods into a new class that handles this shit
@@ -54,7 +59,6 @@ class EditingState < Chingu::GameState
       @animation[name] = []
       mx = x
       stuff[:frames].each_with_index { |f, i|
-        # start with a blank image
         @animation[name][i] = []
         #@animation[name] << TexPlay.create_blank_image($window, stuff[:size][0], stuff[:size][1], color: :alpha)
         #f.each { |p|
@@ -103,6 +107,8 @@ class EditingState < Chingu::GameState
       #how to build a new image from a bunch of gameobjects?
       #i guess pull out the images and splice them together..
       #this isnt going to be fun
+      #actually its not that bad
+      #hillshire farms, GO MEAT
       derp = []
       w,h = *@dat[:animations][name][:size]
       frames.each { |fff|
@@ -114,13 +120,17 @@ class EditingState < Chingu::GameState
       }
       @previews[name].destroy if @previews.has_key? name
       @previews[name] = AnimatedPreview.create(
-        anim: GhettoAnimation.new(frames: derp),
+        anim: GhettoAnimation.new(
+          frames: derp,
+          delay: @dat[:animations][name][:delay],
+          bounce: @dat[:animations][name].has_key?(:bounce) && @dat[:animations][name][:bounce] ? true : false),
         x: ($window.width-20-(derp.first.width*$window.factor)),
         y: frames.first.first.y, zorder: ZOrder::PREVIEW)
+        #first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first
     }
   end
 
-  #deprecated, combined into the above function
+  #deprecated, combined into the above two functions
   def for_your_problems_you_need_look_no_further
     x, y = 100, 100
     @animation.each { |name, frizzames|

@@ -14,7 +14,7 @@ class SpritePart < Chingu::GameObject
   
   def draw
     #adapted from lib/chingu/traits/sprite.rb
-    @image.draw_rot @x+@rx, @y+@ry, @zorder, @angle, @center_x, @center_y, @factor_x, @factor_y, @color, @mode
+    @image.draw_rot @x+(@rx*@factor_x), @y+(@ry*@factor_y), @zorder, @angle, @center_x, @center_y, @factor_x, @factor_y, @color, @mode
   end
   
   def inspect

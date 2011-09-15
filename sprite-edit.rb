@@ -29,7 +29,7 @@ class Window < Chingu::Window
     retrofy
     
     #push_game_state LoadingState
-    push_game_state EditingState.new(file: (ARGV[0] or './media/redchar.yml'))
+    push_game_state EditingState.new(file: (ARGV[0] or './media/boxtest.yml'))
   end
   
 end
