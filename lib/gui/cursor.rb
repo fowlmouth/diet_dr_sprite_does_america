@@ -8,7 +8,7 @@ class Cursor < Chingu::GameObject
   attr_reader :x, :y
 
   def setup
-    self.rotation_center = :center
+    self.rotation_center = :top_left
     @animation = Chingu::Animation.new(
       file:  'media/gui/cursor.png',
       size:  [5,5],

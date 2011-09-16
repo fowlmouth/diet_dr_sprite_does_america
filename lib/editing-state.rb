@@ -29,7 +29,8 @@ class EditingState < Chingu::GameState
       p: -> { binding.pry },
       wheel_up: :wheel_up,
       wheel_down: :wheel_down,
-      mouse_left: :mouse_left
+      mouse_left: :mouse_left,
+      holding_mouse_left: :holding_mouse_left
     }
   end
   
@@ -54,7 +55,7 @@ class EditingState < Chingu::GameState
   end
   
   def new_breakthroughs_in_medical_science_show_promising_results
-    x, y = 100, 100
+    x, y = 50, 50
     @dat[:animations].each { |name, stuff|
       @animation[name] = []
       mx = x
@@ -88,10 +89,10 @@ class EditingState < Chingu::GameState
             zorder: ZOrder::FRAME + i)
         }
         
-        mx += g.width + 15
+        mx += stuff[:size][0] * $window.factor + 15
       }
       
-      y += stuff[:size][1] * $window.factor + 10
+      y += stuff[:size][1] * $window.factor + 15
     }
     
     generate_preview
@@ -125,7 +126,8 @@ class EditingState < Chingu::GameState
           delay: @dat[:animations][name][:delay],
           bounce: @dat[:animations][name].has_key?(:bounce) && @dat[:animations][name][:bounce] ? true : false),
         x: ($window.width-20-(derp.first.width*$window.factor)),
-        y: frames.first.first.y, zorder: ZOrder::PREVIEW)
+        y: frames.first.first.y, zorder: ZOrder::PREVIEW,
+        rotation_center: :top_left)
         #first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first
     }
   end
@@ -194,10 +196,52 @@ class EditingState < Chingu::GameState
     #..
   end
   
+  def holding_mouse_left
+    mx, my = $window.mouse_x, $window.mouse_y
+    if @selected_part
+      #drag
+      #@selected_part is [ :animation_name, ]
+    else
+      #select a part
+      self.select_part mx, my
+    end
+  end
+  
   def active_layer= name
     return unless @layerbs.has_key? name
     @layerbs.each { |n, b| b.color = n == name ? ACTIVE_LAYER : INACTIVE_LAYER }
     @active_layer = name
+  end
+  
+  def select_part x, y
+    #x/y is absolute mouse_x/mouse_y
+    #parts have x/y of the frame so collision must be detected with x+(rx*factor), y+(ry*factor)
+    return unless @active_layer
+    
+    # temp. working with just the first frame of the first animation
+    o = @animation[:cycle].first.first
+    #puts "MOUSE #{x}/#{y}"
+    #puts "PART           #{o.x + (o.rx*o.factor_x)}/#{o.y + (o.ry*o.factor_y)}"
+    
+    if o.collision_at?(x, y)
+      puts 'COLLIDE?'
+      ax, ay = x-o.x, y-o.y
+      #if o.image.transparent_pixel?(
+      binding.pry
+    end
+    
+    return
+    
+    @animation.each { |name, frames|
+      frames.each { |parts|
+        parts.select { |p| p.part[0] == @active_layer }.each { |p|
+          if p.collision_at?(x+p.x+(p.x*p.factor_x), y+p.y+(p.ry*p.factor_y))
+            puts "Selected #{p.part[0]}:#{p.part[1]} in frame #{p.frame[0]}:#{p.frame[1]}"
+            return
+          end
+        }
+      }
+    }
   end
 end
 end

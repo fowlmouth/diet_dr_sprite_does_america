@@ -9,16 +9,19 @@ class SpritePart < Chingu::GameObject
     @part = options.delete :part
     @rx, @ry = options.delete(:rx), options.delete(:ry)
     @frame = options.delete :frame
-    super(options)
+    super options.merge(rotation_center: :top_left)
   end
   
   def draw
     #adapted from lib/chingu/traits/sprite.rb
+    #TODO: use draw_relative, allow use of angle and color
     @image.draw_rot @x+(@rx*@factor_x), @y+(@ry*@factor_y), @zorder, @angle, @center_x, @center_y, @factor_x, @factor_y, @color, @mode
   end
   
   def inspect
     "#<#{part[0]}:#{part[1]} @ #{rx}/#{ry} in #{frame[0]}:#{frame[1]}>"
   end
+  
+  
 end
 end

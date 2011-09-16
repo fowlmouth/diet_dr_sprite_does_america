@@ -32,6 +32,11 @@ class Window < Chingu::Window
     push_game_state EditingState.new(file: (ARGV[0] or './media/boxtest.yml'))
   end
   
+  def update
+    super
+    self.caption = "Mouse @ #{mouse_x}/#{mouse_y}"
+  end
+  
 end
 end
 
