@@ -30,7 +30,8 @@ class EditingState < Chingu::GameState
       wheel_up: :wheel_up,
       wheel_down: :wheel_down,
       mouse_left: :mouse_left,
-      holding_mouse_left: :holding_mouse_left
+      holding_mouse_left: :holding_mouse_left,
+      mouse_right: :clear
     }
   end
   
@@ -200,15 +201,25 @@ class EditingState < Chingu::GameState
     mx, my = $window.mouse_x, $window.mouse_y
     if @selected_part
       #drag
-      #@selected_part is [ :animation_name, ]
+      dx = (mx-@ox).to_i/@selected_part.factor_x
+      dy = (my-@oy).to_i/@selected_part.factor_y
+      puts "#{mx},#{my}  from   #{@ox},#{@oy}   diff #{mx-@ox},#{my-@oy}  ... #{dx},#{dy}"
+      if dx != 0 || dy != 0
+        @selected_part.move dx, dy
+        @ox, @oy = mx, my
+      end
     else
       #select a part
       self.select_part mx, my
     end
   end
   
+  def clear
+    @selected_part = nil
+    self.active_layer = nil
+  end
+  
   def active_layer= name
-    return unless @layerbs.has_key? name
     @layerbs.each { |n, b| b.color = n == name ? ACTIVE_LAYER : INACTIVE_LAYER }
     @active_layer = name
   end
@@ -218,26 +229,18 @@ class EditingState < Chingu::GameState
     #parts have x/y of the frame so collision must be detected with x+(rx*factor), y+(ry*factor)
     return unless @active_layer
     
-    # temp. working with just the first frame of the first animation
-    o = @animation[:cycle].first.first
-    #puts "MOUSE #{x}/#{y}"
-    #puts "PART           #{o.x + (o.rx*o.factor_x)}/#{o.y + (o.ry*o.factor_y)}"
-    
-    if o.collision_at?(x, y)
-      puts 'COLLIDE?'
-      ax, ay = x-o.x, y-o.y
-      #if o.image.transparent_pixel?(
-      binding.pry
-    end
-    
-    return
-    
     @animation.each { |name, frames|
       frames.each { |parts|
         parts.select { |p| p.part[0] == @active_layer }.each { |p|
-          if p.collision_at?(x+p.x+(p.x*p.factor_x), y+p.y+(p.ry*p.factor_y))
-            puts "Selected #{p.part[0]}:#{p.part[1]} in frame #{p.frame[0]}:#{p.frame[1]}"
-            return
+          if p.collision_at?(x, y)
+            ax = (x-p.x).to_i/p.factor_x
+            ay = (y-p.y).to_i/p.factor_y
+            unless p.image.transparent_pixel?(ax, ay)
+              puts "Selected #{p.part[0]}:#{p.part[1]} in frame #{p.frame[0]}:#{p.frame[1]}"
+              @ox, @oy = x, y
+              @selected_part = p
+              return
+            end
           end
         }
       }

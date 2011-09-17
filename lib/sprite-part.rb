@@ -22,6 +22,9 @@ class SpritePart < Chingu::GameObject
     "#<#{part[0]}:#{part[1]} @ #{rx}/#{ry} in #{frame[0]}:#{frame[1]}>"
   end
   
-  
+  def move x, y
+    @rx += x
+    @ry += y
+  end
 end
 end
