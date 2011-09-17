@@ -1,7 +1,8 @@
 module SpriteEdit
 class SpritePart < Chingu::GameObject
   trait :bounding_box
-  attr_reader :part, :rx, :ry, :frame
+  attr_reader :part, :frame
+  attr_accessor :rx, :ry
   def initialize options = {}
     raise 'SpritePart created without :part option' unless options.has_key?(:part)
     raise 'SpritePart created without :rx or :ry' unless options.has_key?(:rx) || options.has_key?(:ry)
@@ -20,11 +21,6 @@ class SpritePart < Chingu::GameObject
   
   def inspect
     "#<#{part[0]}:#{part[1]} @ #{rx}/#{ry} in #{frame[0]}:#{frame[1]}>"
-  end
-  
-  def move x, y
-    @rx += x
-    @ry += y
   end
 end
 end

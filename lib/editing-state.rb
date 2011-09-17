@@ -10,19 +10,27 @@ class EditingState < Chingu::GameState
     @file = @options[:file]
     @dat = YAML.load_file File.expand_path(@file)
     
-    @parts = {}
-    @animation = {}
-    @previews = {}
+    @parts, @animation, @previews = {}, {}, {}
     
-    @layerbs = {}
-    @active_layer = nil
+    @layerbs, @active_layer, @selected_part = {}, nil, nil
     
     @cursor = Gui::Cursor.create
     
-    cant_get_it_up?
-    new_breakthroughs_in_medical_science_show_promising_results
-    #for_your_problems_you_need_look_no_further
-    grow_yo_coque_is_a_new_product_that_is_guaranteed_to
+    #binding.pry
+    
+    load_parts
+    
+    @dat[:animations].each { |name, anim|
+      if anim.has_key? :random_frames
+        @dat[:animations][name][:frames] = (0..anim[:random_frames][1]-1).map { [[anim[:random_frames][0], rand(@parts[anim[:random_frames][0]].frames.size), 0, 0]] }
+      end
+    }
+    
+    load_frames
+    
+    load_preview
+    
+    layer_buttons
     
     
     self.input = {
@@ -36,7 +44,7 @@ class EditingState < Chingu::GameState
   end
   
   #TODO factor these two methods into a new class that handles this shit
-  def cant_get_it_up?
+  def load_parts
     dir = @dat['parts']['dir']
     @dat['parts'].each { |key, value|
       next unless key.is_a? Symbol
@@ -55,20 +63,16 @@ class EditingState < Chingu::GameState
 #    end
   end
   
-  def new_breakthroughs_in_medical_science_show_promising_results
+  def load_frames
     x, y = 50, 50
     @dat[:animations].each { |name, stuff|
       @animation[name] = []
       mx = x
       stuff[:frames].each_with_index { |f, i|
         @animation[name][i] = []
-        #@animation[name] << TexPlay.create_blank_image($window, stuff[:size][0], stuff[:size][1], color: :alpha)
-        #f.each { |p|
-          # copypasta
-        #  @animation[name].last.splice @parts[p[0]][p[1]], p[2], p[3], chroma_key: :alpha
-        #}
         
         g = Grid.game_obj [stuff[:size][0], stuff[:size][1], $window.factor, $window.factor], x: mx, y: y
+        
         
         f.each { |p|
           #TODO at saving time compare each part's image to the corresponding in @parts[:name][offset]
@@ -83,6 +87,7 @@ class EditingState < Chingu::GameState
           #ALSO, parts are going to store their own name and offset and the image associated with it.
           #i dont think it is possible to pull the image from @parts from inside the part without using a factory
           #or some shit like Grid method which i'd like to avoid. so let's just be redundant :
+          
           @animation[name][i] << SpritePart.create(
             part: [p[0], p[1]],
             image: @parts[p[0]][p[1]], rx: p[2], ry: p[3],
@@ -96,10 +101,9 @@ class EditingState < Chingu::GameState
       y += stuff[:size][1] * $window.factor + 15
     }
     
-    generate_preview
   end
   
-  def generate_preview anim_name = nil
+  def load_preview anim_name = nil
     #make a local copy of the animation to be generated, if only one is selected
     animation = anim_name && @animation.has_key?(anim_name) \
       ? { anim_name => @animation[anim_name] } \
@@ -132,28 +136,8 @@ class EditingState < Chingu::GameState
         #first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first.first
     }
   end
-
-  #deprecated, combined into the above two functions
-  def for_your_problems_you_need_look_no_further
-    x, y = 100, 100
-    @animation.each { |name, frizzames|
-      # create ein gameobject vor each frame, UND EIN PREVIEW
-      mx = x
-      frizzames.each { |fff|
-        #replace later with an object that responds to clicks drags etc
-        #or maybe an object for each part. yeah. probably that.
-        Grid.game_obj [fff.width, fff.height, $window.factor, $window.factor], x: mx, y: y
-        Chingu::GameObject.create image: fff, x: mx, y: y, zorder: 100
-        mx += fff.width * $window.factor + 10
-      }
-      @previews << AnimatedPreview.create(anim: GhettoAnimation.new(frames: frizzames),
-        x: ($window.width-20-(frizzames.first.width*$window.factor)), 
-        y: y, zorder: 100)
-      y += frizzames.first.height * $window.factor + 10
-    }
-  end
   
-  def grow_yo_coque_is_a_new_product_that_is_guaranteed_to
+  def layer_buttons
     x = 15
     @parts.each { |name, anim|
       b = Gui::Button.create(
@@ -172,6 +156,16 @@ class EditingState < Chingu::GameState
       @layerbs[name] = b
       x += b.width+6
     }
+  end
+  
+  def update
+    if @selected_part && !$window.button_down?(Gosu::MsLeft)
+      #update the preview associated with @selected_part
+      load_preview @selected_part.frame[0]
+      @selected_part = nil
+      $-.out 'Cleared selection'
+    end
+    super
   end
   
   def wheel_down
@@ -201,12 +195,21 @@ class EditingState < Chingu::GameState
     mx, my = $window.mouse_x, $window.mouse_y
     if @selected_part
       #drag
-      dx = (mx-@ox).to_i/@selected_part.factor_x
-      dy = (my-@oy).to_i/@selected_part.factor_y
-      puts "#{mx},#{my}  from   #{@ox},#{@oy}   diff #{mx-@ox},#{my-@oy}  ... #{dx},#{dy}"
-      if dx != 0 || dy != 0
-        @selected_part.move dx, dy
-        @ox, @oy = mx, my
+      dx = (mx-@ox)/@selected_part.factor_x
+      dx = dx > 0 ? dx.floor : dx.ceil
+      dy = (my-@oy)/@selected_part.factor_y
+      dy = dy > 0 ? dy.floor : dy.ceil
+      $-.out "%d,%d  from    %d,%d    diff %d,%d  ...  %d,%d" % \
+        [mx, my, @ox, @oy, mx-@ox, my-@oy, dx, dy].map(&:to_i)
+      #$-.out "#{mx},#{my}  from   #{@ox},#{@oy}   diff #{mx-@ox},#{my-@oy}  ... #{dx},#{dy}"
+
+      if dx != 0
+        @selected_part.rx += dx
+        @ox = mx
+      end
+      if dy != 0
+        @selected_part.ry += dy
+        @oy = my
       end
     else
       #select a part
@@ -236,7 +239,7 @@ class EditingState < Chingu::GameState
             ax = (x-p.x).to_i/p.factor_x
             ay = (y-p.y).to_i/p.factor_y
             unless p.image.transparent_pixel?(ax, ay)
-              puts "Selected #{p.part[0]}:#{p.part[1]} in frame #{p.frame[0]}:#{p.frame[1]}"
+              $-.out "Selected #{p.part[0]}:#{p.part[1]} in frame #{p.frame[0]}:#{p.frame[1]}"
               @ox, @oy = x, y
               @selected_part = p
               return

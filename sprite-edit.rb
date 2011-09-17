@@ -19,6 +19,19 @@ $: << '.'
   gui/button
 ].each { |l| require "lib/#{l}" }
 
+#check out my awesome debugging thing, im cool huh :)
+$- = Class.new do
+  def initialize
+    @last_str = nil
+  end
+  
+  def out str
+    return if str == @last_str || !$DEBUG
+    @last_str = str
+    puts str
+  end
+end.new
+
 module SpriteEdit
 class Window < Chingu::Window
   
