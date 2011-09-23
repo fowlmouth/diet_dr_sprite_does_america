@@ -2,12 +2,16 @@ module SpriteEdit
 module Grid
 
   GRIDCOLOR = ::Gosu::Color::argb(50, 255, 255, 255)
+  TEMP = []
   @grids = {}
+  @background_color, @background_objects = nil, []
   
   def self.[] key
     return unless key.is_a? Array
     
     key = [key[0], key[1], $window.factor, $window.factor] unless key.size == 4
+    key[2] = key[2].floor
+    key[3] = key[3].floor
     
     return @grids[key] if @grids.has_key? key
     
@@ -39,8 +43,22 @@ module Grid
     @grids[key] = i
   end
   
+  def self.background_color= color
+    @background_color = color
+  end
+  
   def self.game_obj key, options = {}
-    Chingu::GameObject.create({image: self[key], factor_x: 1, factor_y: 1, zorder: ZOrder::GRID, rotation_center: :top_left}.merge(options))
+    if color = options.delete(:bg_color)
+      @background_objects << Chingu::GameObject.create(
+        options.merge({
+          image: $window.pixel,
+          factor_x: key[0]*key[2],
+          factor_y: key[1]*key[3],
+          zorder: ZOrder::FRAME-1,
+          rotation_center: :top_left,
+          color: color}))
+    end
+    Gui::Button.create({image: self[key], factor_x: 1, factor_y: 1, zorder: ZOrder::GRID, rotation_center: :top_left}.merge(options))
   end
 
 end

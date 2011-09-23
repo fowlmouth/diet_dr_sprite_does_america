@@ -3,54 +3,42 @@
   gosu
   chingu
   texplay
+  ostruct
   pry
 ].each { |l| require l }
-$: << '.'
+DEBUG = true
+#$:.unshift File.dirname(__FILE__)
 %w[
+  main-window
+  gui/frame-options
+  gui/layer-options
+  gui/textfield
+  gui/cursor
+  gui/button
   editing-state
+  frame-set
   loading-state
   ghetto-animation
   anim-preview
   sprite-part
   zorder
   grid
-  gui/textfield
-  gui/cursor
-  gui/button
-].each { |l| require "lib/#{l}" }
+].each { |l| require_relative "./lib/#{l}" }
+
+Settings = OpenStruct.new \
+  resolution: [1024, 640],
+  default_file: './media/test/boxtest.yml'
+  
 
 #check out my awesome debugging thing, im cool huh :)
-$- = Class.new do
-  def initialize
-    @last_str = nil
-  end
+$- = Module.new {
+  @last_str = nil
   
-  def out str
-    return if str == @last_str || !$DEBUG
+  def self.out str
+    return if !DEBUG || str == @last_str
     @last_str = str
     puts str
   end
-end.new
-
-module SpriteEdit
-class Window < Chingu::Window
-  
-  def initialize
-    super 640, 480, false
-    self.factor = 4
-    self.input = { escape: :exit }# left_mouse_button: :lclick }
-    retrofy
-    
-    #push_game_state LoadingState
-    push_game_state EditingState.new(file: (ARGV[0] or './media/boxtest.yml'))
-  end
-  
-  def update
-    super
-    self.caption = "Mouse @ #{mouse_x}/#{mouse_y}"
-  end
-  
-end
-end
+}
 
 SpriteEdit::Window.new.show
